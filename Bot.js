@@ -43,7 +43,6 @@ function sleep(ms) {
     });
     await sleep(1000);
     await page.click("div[id='GInterface.Instances[0].Instances[1]_Combo2']");
-    await sleep(5000);
     
     //--------------------------------------------------------------------------------------
     
@@ -134,6 +133,10 @@ function sleep(ms) {
     await sleep(750);
     await page.click("div[id='GInterface.Instances[0].Instances[1]_Combo5']");
     
+    // Pour la semaine 32
+    await sleep(1750);
+    await page.click("div[id='GInterface.Instances[2].Instances[0]_j_32']");
+    
     await sleep(750);
     let nb_cours = await page.$$eval("div[class='EmploiDuTemps_Element AvecMain']", cours_html => cours_html.length);
     
@@ -147,42 +150,34 @@ function sleep(ms) {
     one_day = Math.floor(one_day.slice(0,-2) / 5);
 
 
-    // Alors beh truc de fou mais a chaque fois que tu reload un onglet de pronote : cilck sur onglet note ensuite sur onglet emploi du temps alors les id des cours changes
+    // Alors beh truc de fou mais a chaque fois que tu reload un onglet de pronote : cilck sur onglet note ensuite sur onglet emploi du temps alors les id des cours changent
+    
     let truc_de_merde_qui_me_fait_chié = await page.$eval("div[class='EmploiDuTemps_Element AvecMain']", cours_html => cours_html.id);
     truc_de_merde_qui_me_fait_chié = truc_de_merde_qui_me_fait_chié.slice(0,-1);
 
-    for (let i = 0; i < nb_cours; i++) {
-        cours.push(await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(i) + "']", cours_html => cours_html.outerText));
-        
-        heure = await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(i) + "']", cours_html => cours_html.style.top);
-        duree = await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(i) + "']", cours_html => cours_html.style.height);
-        jour = await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(i) + "']", cours_html => cours_html.style.left);
-       
-        console.log("Heure = " + Math.floor((heure.slice(0,-2)-i)/one_hour) + " / Jour = " + Math.round(jour.slice(0, -2)/one_day) + " / Duree = " + Math.floor(duree.slice(0,-2)/one_hour));
-        // Pb avec les heures mais le reste fonctionne
+    for (let j = 0; j < nb_cours; j++) {
 
-        cours_modified[i] = cours[i].split("\n")[0];
-        if (cours_modified[i].includes("Cours annulé") || cours_modified[i].includes("Prof. absent") || cours_modified[i].includes("Prof./pers. absent")) {
-            cours_modified[i] = cours[i].split("\n")[0] + " : " + cours[i].split("\n\n\n")[1].split("\n")[0];
+        console.log(await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(j) + "']", cours_html => cours_html.style.visibility));
+
+        if (await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(j) + "']", cours_html => cours_html.style.visibility == "visible")) {
+            
+            cours.push(await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(j) + "']", cours_html => cours_html.outerText));
+            let i = cours.length - 1;
+            cours_modified[i] = cours[i].split("\n")[0]; // .split("\n")[0]
+                
+            if (cours_modified[i].includes("Cours annulé") || cours_modified[i].includes("Prof. absent") || cours_modified[i].includes("Prof./pers. absent")) {
+                cours_modified[i] = cours[i].split("\n")[0] + " : " + cours[i].split("\n\n\n")[1].split("\n")[0];
+            }
+                
+            heure = await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(j) + "']", cours_html => cours_html.style.top);
+            duree = await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(j) + "']", cours_html => cours_html.style.height);
+            jour = await page.$eval("div[id='" + truc_de_merde_qui_me_fait_chié + String(j) + "']", cours_html => cours_html.style.left);
+                    
+            console.log("Heure = " + Math.floor((heure.slice(0,-2))/one_hour) + " / Jour = " + Math.round(jour.slice(0, -2)/one_day) + " / Duree = " + Math.floor(duree.slice(0,-2)/one_hour));
+            console.log(cours_modified[i]);
+            
         }
     }
-    console.log(cours_modified);
-
-    // <div id="id_153_cours_0" class="EmploiDuTemps_Element AvecMain" style="border: 1px solid rgb(132, 132, 132); visibility: visible; left: -1px; top: 23px; width: 235px; height: 23px;">
-    //     <div class="cours-simple jiehint" id="id_153_coursInt_0">
-    //         <table class="Cours " style=" background-color:#f6e5dd;border-width:1px 1px 1px 5px; border-style:solid; border-color:#FFCAB0" cellspacing="0" cellpadding="0">
-    //             <tbody>
-    //                 <tr>
-    //                     <td id="id_153_cont0" valign="center" align="middle" style="padding:0px 1px 0px 1px;">
-    //                         <div class="NoWrap AlignementMilieu" style=" color:#000;height:13px;line-height:13px; overflow:hidden;width:226px;text-overflow:ellipsis;">ENS. MORAL &amp; CIVIQUE
-    //                         </div>
-    //                     </td>
-    //                 </tr>
-    //             </tbody>
-    //         </table>
-    //     </div>
-    // </div>
-
 
     //--------------------------------------------------------------------------------------
 
